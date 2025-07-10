@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { PhaseNavigator } from "@/components/PhaseNavigator";
 import { Dashboard } from "@/components/Dashboard";
 import { DecisionsList } from "@/components/DecisionsList";
@@ -6,8 +9,9 @@ import { DecisionForm } from "@/components/DecisionForm";
 import { ExportCenter } from "@/components/ExportCenter";
 import { EmptyState } from "@/components/EmptyState";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { QuickReferenceButton } from "@/components/AppendixDrawer";
 import { GettingStartedGuide } from "@/components/GettingStartedGuide";
@@ -34,10 +38,69 @@ export interface Decision {
 }
 
 const Index = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [currentPhase, setCurrentPhase] = useState<Phase>("discovery");
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [showDecisionForm, setShowDecisionForm] = useState(false);
   const [editingDecision, setEditingDecision] = useState<Decision | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Load user's decisions from Supabase
+  useEffect(() => {
+    if (user) {
+      loadDecisions();
+    }
+  }, [user]);
+
+  const loadDecisions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('decisions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        toast.error('Failed to load decisions');
+        console.error('Error loading decisions:', error);
+        return;
+      }
+
+      // Transform database format to component format
+      const transformedDecisions: Decision[] = data.map(dbDecision => ({
+        id: dbDecision.id,
+        phase: dbDecision.phase as Phase,
+        date: new Date(dbDecision.date).toISOString().split('T')[0],
+        title: dbDecision.title,
+        rationale: dbDecision.rationale || '',
+        evidence: dbDecision.evidence || '',
+        goldTheories: dbDecision.gold_theories || [],
+        evidenceSources: dbDecision.evidence_sources || [],
+        alternatives: dbDecision.alternatives || '',
+        aiTools: dbDecision.ai_tools || '',
+        qualityAssurance: dbDecision.quality_assurance || '',
+        risks: dbDecision.risks || '',
+        evaluation: dbDecision.evaluation || '',
+        successMetrics: dbDecision.success_metrics || [],
+        timeline: dbDecision.timeline || '',
+        owner: dbDecision.owner || '',
+      }));
+
+      setDecisions(transformedDecisions);
+    } catch (error) {
+      toast.error('Failed to load decisions');
+      console.error('Error loading decisions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getPhaseColor = (phase: Phase) => {
     const colors = {
@@ -50,14 +113,58 @@ const Index = () => {
     return colors[phase];
   };
 
-  const handleSaveDecision = (decision: Decision) => {
-    if (editingDecision) {
-      setDecisions(prev => prev.map(d => d.id === decision.id ? decision : d));
-      toast.success("Decision updated successfully!");
-    } else {
-      setDecisions(prev => [...prev, decision]);
-      toast.success("Decision saved successfully!");
+  const handleSaveDecision = async (decision: Decision) => {
+    if (!user) return;
+
+    try {
+      // Transform component format to database format
+      const dbDecision = {
+        user_id: user.id,
+        phase: decision.phase,
+        date: new Date(decision.date).toISOString(),
+        title: decision.title,
+        rationale: decision.rationale,
+        evidence: decision.evidence,
+        gold_theories: decision.goldTheories,
+        evidence_sources: decision.evidenceSources,
+        alternatives: decision.alternatives,
+        ai_tools: decision.aiTools,
+        quality_assurance: decision.qualityAssurance,
+        risks: decision.risks,
+        evaluation: decision.evaluation,
+        success_metrics: decision.successMetrics,
+        timeline: decision.timeline,
+        owner: decision.owner,
+      };
+
+      if (editingDecision) {
+        const { error } = await supabase
+          .from('decisions')
+          .update(dbDecision)
+          .eq('id', decision.id);
+        
+        if (error) throw error;
+        
+        setDecisions(prev => prev.map(d => d.id === decision.id ? decision : d));
+        toast.success("Decision updated successfully!");
+      } else {
+        const { data, error } = await supabase
+          .from('decisions')
+          .insert([dbDecision])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        const newDecision = { ...decision, id: data.id };
+        setDecisions(prev => [newDecision, ...prev]);
+        toast.success("Decision saved successfully!");
+      }
+    } catch (error) {
+      toast.error("Failed to save decision");
+      console.error('Error saving decision:', error);
     }
+    
     setShowDecisionForm(false);
     setEditingDecision(null);
   };
@@ -67,12 +174,38 @@ const Index = () => {
     setShowDecisionForm(true);
   };
 
-  const handleDeleteDecision = (id: string) => {
-    setDecisions(prev => prev.filter(d => d.id !== id));
-    toast.success("Decision deleted");
+  const handleDeleteDecision = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('decisions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setDecisions(prev => prev.filter(d => d.id !== id));
+      toast.success("Decision deleted");
+    } catch (error) {
+      toast.error("Failed to delete decision");
+      console.error('Error deleting decision:', error);
+    }
   };
 
   const currentPhaseDecisions = decisions.filter(d => d.phase === currentPhase);
+
+  // Show loading spinner while checking auth or loading data
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,6 +222,7 @@ const Index = () => {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <QuickReferenceButton />
+            <UserMenu />
           </div>
         </div>
 

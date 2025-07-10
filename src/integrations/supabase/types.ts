@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      decisions: {
+        Row: {
+          ai_tools: string | null
+          alternatives: string | null
+          created_at: string
+          date: string
+          evaluation: string | null
+          evidence: string | null
+          evidence_sources: string[] | null
+          gold_theories: string[] | null
+          id: string
+          owner: string | null
+          phase: string
+          quality_assurance: string | null
+          rationale: string | null
+          risks: string | null
+          success_metrics: string[] | null
+          timeline: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_tools?: string | null
+          alternatives?: string | null
+          created_at?: string
+          date?: string
+          evaluation?: string | null
+          evidence?: string | null
+          evidence_sources?: string[] | null
+          gold_theories?: string[] | null
+          id?: string
+          owner?: string | null
+          phase: string
+          quality_assurance?: string | null
+          rationale?: string | null
+          risks?: string | null
+          success_metrics?: string[] | null
+          timeline?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_tools?: string | null
+          alternatives?: string | null
+          created_at?: string
+          date?: string
+          evaluation?: string | null
+          evidence?: string | null
+          evidence_sources?: string[] | null
+          gold_theories?: string[] | null
+          id?: string
+          owner?: string | null
+          phase?: string
+          quality_assurance?: string | null
+          rationale?: string | null
+          risks?: string | null
+          success_metrics?: string[] | null
+          timeline?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
