@@ -21,7 +21,8 @@ The codebase you are viewing is a community fork now actively **maintained by Si
 -   📝 **Decision journal** – create, edit and delete rich decision entries with evidence, risks & success metrics
 -   📊 **Dashboards & charts** – instant visual overview of progress and phase distribution
 -   📤 **Export centre** – one-click export to CSV / PDF / DOCX for stakeholder reporting
--   🔐 **Authentication** – Supabase e-mail & social log-in
+-   🔐 **Authentication** – Supabase e-mail & social log-in  
+    > **Note:** The password reset flow currently signs users in but does not prompt them to set a new password. This is a known limitation that needs to be addressed in a future update.
 -   ☁️ **Cloud storage** – data persisted in Supabase Postgres
 -   🎨 **Beautiful UI** – built with Tailwind CSS and shadcn/ui components
 
