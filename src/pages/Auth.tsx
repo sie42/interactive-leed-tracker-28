@@ -13,8 +13,10 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const { signIn, signUp, resetPassword, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,6 +84,30 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await resetPassword(resetEmail);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('Password reset email sent! Check your inbox.');
+        setShowForgotPassword(false);
+        setResetEmail('');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -99,17 +125,52 @@ const Auth = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
+            <CardTitle>
+              {showForgotPassword ? 'Reset Password' : 'Welcome'}
+            </CardTitle>
             <CardDescription>
-              Sign in to your account or create a new one to get started
+              {showForgotPassword 
+                ? 'Enter your email to receive a password reset link'
+                : 'Sign in to your account or create a new one to get started'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+            {showForgotPassword ? (
+              <div className="space-y-4">
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Send Reset Email
+                  </Button>
+                </form>
+                <Button 
+                  variant="ghost" 
+                  className="w-full" 
+                  onClick={() => setShowForgotPassword(false)}
+                  disabled={loading}
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            ) : (
+              <Tabs defaultValue="signin" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="signin">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
               
               <TabsContent value="signin" className="space-y-4">
                 <form onSubmit={handleSignIn} className="space-y-4">
@@ -142,6 +203,16 @@ const Auth = () => {
                     Sign In
                   </Button>
                 </form>
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="link" 
+                    onClick={() => setShowForgotPassword(true)}
+                    disabled={loading}
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Forgot your password?
+                  </Button>
+                </div>
               </TabsContent>
               
               <TabsContent value="signup" className="space-y-4">
@@ -189,6 +260,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </CardContent>
         </Card>
       </div>
