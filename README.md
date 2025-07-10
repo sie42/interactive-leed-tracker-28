@@ -1,6 +1,7 @@
 # Interactive LEED Tracker
 
-Learning Engineering Evidence & Decisions Tool
+Learning Engineering Evidence & Decisions Tool  
+**Version: v1.0.0**
 
 The **Interactive LEED Tracker** is a web application that helps learning-engineering teams document, visualise and share design decisions across the five product-development phases: **Discovery → Design → Development → Delivery → Evaluation**.
 

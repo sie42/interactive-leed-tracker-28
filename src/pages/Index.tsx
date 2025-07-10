@@ -7,6 +7,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { DecisionsList } from "@/components/DecisionsList";
 import { DecisionForm } from "@/components/DecisionForm";
 import { ExportCenter } from "@/components/ExportCenter";
+import { Footer } from "@/components/Footer";
 import { EmptyState } from "@/components/EmptyState";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
@@ -213,7 +214,8 @@ const Index = () => {
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 px-4">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -287,6 +289,8 @@ const Index = () => {
         />
       )}
     </div>
+      <Footer />
+    </>
   );
 };
 
