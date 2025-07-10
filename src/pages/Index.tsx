@@ -44,14 +44,23 @@ const Index = () => {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [showDecisionForm, setShowDecisionForm] = useState(false);
   const [editingDecision, setEditingDecision] = useState<Decision | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  // Redirect to auth if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
+  // Only allow decision creation when authenticated
+  const handleCreateDecisionClick = () => {
+    if (user) {
+      setShowDecisionForm(true);
+    } else {
       navigate('/auth');
     }
-  }, [user, authLoading, navigate]);
+  };
+  const [loading, setLoading] = useState(true);
+
+  // When unauthenticated, stop the loading spinner so the public landing view renders
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   // Load user's decisions from Supabase
   useEffect(() => {
@@ -202,10 +211,6 @@ const Index = () => {
     );
   }
 
-  // Don't render if not authenticated (will redirect)
-  if (!user) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -241,7 +246,7 @@ const Index = () => {
                 {currentPhase} Phase
               </h2>
               <Button
-                onClick={() => setShowDecisionForm(true)}
+                onClick={handleCreateDecisionClick}
                 className={`flex items-center gap-2 text-white ${getPhaseColor(currentPhase)}`}
               >
                 <Plus className="h-4 w-4" />
@@ -252,7 +257,7 @@ const Index = () => {
             {currentPhaseDecisions.length === 0 ? (
               <EmptyState
                 phase={currentPhase}
-                onCreateDecision={() => setShowDecisionForm(true)}
+                onCreateDecision={handleCreateDecisionClick}
               />
             ) : (
               <DecisionsList
